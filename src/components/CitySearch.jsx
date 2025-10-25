@@ -42,14 +42,51 @@ export default function CitySearch({ onSelectAdcode = () => {}, placeholder = '�
     setSuggests(matched)
   }, [query, list])
 
+  function handleSearch() {
+    const q = (query || '').trim()
+    if (!q) return
+
+    // If user typed an adcode directly (6+ digits), use it
+    if (/^\d{6,}$/.test(q)) {
+      onSelectAdcode(q)
+      return
+    }
+
+    const qLower = q.toLowerCase()
+    // try exact match first
+    let found = list.find((item) => item.name.toLowerCase() === qLower)
+    // otherwise contains match
+    if (!found) found = list.find((item) => item.name.toLowerCase().includes(qLower))
+
+    if (found) {
+      setQuery(found.name)
+      setSuggests([])
+      onSelectAdcode(found.adcode)
+    } else {
+      // no match: do nothing or optionally notify user
+      // keep suggests empty
+      setSuggests([])
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={placeholder}
-        style={{ padding: 8, borderRadius: 8, border: '1px solid #e5e7eb' }}
-      />
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSearch() }}
+          placeholder={placeholder}
+          style={{ padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', flex: 1 }}
+        />
+
+        <button
+          onClick={handleSearch}
+          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer' }}
+        >
+          搜索
+        </button>
+      </div>
 
       {loading && <div style={{ color: '#6b7280' }}>正在加载城市列表...</div>}
 
